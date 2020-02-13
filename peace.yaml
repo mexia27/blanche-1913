@@ -8,7 +8,7 @@
       yum:
        name: "{{ item }}"
        state: latest
-     with_items:
+      with_items:
          - httpd
          - bind
          - ftp
@@ -16,7 +16,7 @@
          - vsftpd
     - name: ensure that these service have been started and enabled automatically
       service:
-       name: {{ item }}
+       name: "{{ item }}"
        state: started
        enabled: yes
       with_items:
