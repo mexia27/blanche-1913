@@ -2,13 +2,16 @@
 - name: Ensure that these packages are at their latest version
   hosts: localhost
   remote_user: root
-  gather_fact: yes
+  gather_facts: yes
   tasks:
     - name: install these packages
       yum:
-       name: "{{ item }}"
-       state: latest
-      with_items:
+#            update_cache: yes
+    - name: install these packages
+      package:
+        name: "{{ item }}"
+        state: latest
+      with_items:   
          - httpd
          - bind
          - ftp
@@ -23,16 +26,37 @@
           - httpd
           - vsftpd
           - named
-          - ftp
-    - name: make sure firewall allows thses services
-      firewall:
+#          - ftp
+    - name: make sure firewall allows these services
+      firewalld:
        service: "{{ item }}"
-       permanet: yes
+       permanent: yes
        immediate: yes
        state: enabled
       with_items:
-          - httpd
-          - named
-          - vsftpd
-          - ftp
-
+          - http
+#          - named
+#          - vsftpd
+#          - ftp
+    - name: create these directories
+      file:
+       path: "{{ item }}"
+       state: directory 
+       recurse: yes
+      with_items:    
+          -  /home/kwabena/fanta
+          -  /home/mexia27/hate
+          - /var/www/lower
+    - name: create these folders
+      file:
+       path: "{{ item }}"
+       state: absent
+      with_items:
+          - /home/kwabena/fanta
+          - /home/mexia27/hate
+          - /var/www/lower
+      tags: DONT
+#       recurse: yes
+          #       owner: root
+#       group: root
+#       mode: 0755
