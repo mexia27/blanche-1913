@@ -1,0 +1,38 @@
+---
+- name: Ensure that these packages are at their latest version
+  hosts: localhost
+  remote_user: root
+  gather_fact: yes
+  tasks:
+    - name: install these packages
+      yum:
+       name: "{{ item }}"
+       state: latest
+     with_items:
+         - httpd
+         - bind
+         - ftp
+         - mysql
+         - vsftpd
+    - name: ensure that these service have been started and enabled automatically
+      service:
+       name: {{ item }}
+       state: started
+       enabled: yes
+      with_items:
+          - httpd
+          - vsftpd
+          - named
+          - ftp
+    - name: make sure firewall allows thses services
+      firewall:
+       service: "{{ item }}"
+       permanet: yes
+       immediate: yes
+       state: enabled
+      with_items:
+          - httpd
+          - named
+          - vsftpd
+          - ftp
+
