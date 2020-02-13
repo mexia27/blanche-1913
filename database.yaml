@@ -1,0 +1,173 @@
+---
+- name: Install MySQL mediawiki server
+  hosts: localhost
+  remote_user: root
+  gather_facts: yes
+  tags: [database]
+  vars:
+    wiki_database: wikimedia_db
+  tasks:
+        - name: Update the software package repository
+          yum:
+           name:
+              - mysql
+              - httpd
+              - php
+              - php70-php-mysqlnd
+              - php70-php-xml
+              - php70-php-json
+              - php70-php-intl
+              - php70-php-common
+              - php70-php-pear
+              - php70-php-gd
+              - php70-php-fpm
+              - php70-php-mbstring
+              - php70-php-process
+              - php70-php-pdo
+              - php-mysql
+              - mariadb-server
+              - MySQL-python.x86_64
+              - gcc
+              - libxml2-devel
+              - pkgconfig
+              - openssl-devel
+              - bzip2-devel
+              - curl-devel
+              - libpng-devel
+              - libpng-devel
+              - libjpeg-devel
+              - libXpm-devel
+              - freetype-devel
+              - gmp-devel
+              - libmcrypt-devel
+              - mariadb-devel
+              - aspell-devel
+              - recode-devel
+              - httpd-devel
+           state: latest
+        - name: start the mysql service and enable it
+          service:
+            name: "{{ item }}" 
+            state: started
+            enabled: yes
+          with_items:     
+              - httpd
+              - mariadb
+        - name: create wiki.conf 
+          copy:
+           content: |
+                    <VirtualHost *:80>
+                    ServerAdmin root@mediawiki.com
+                    ServerName mediawiki.com
+                    ServerAlias www.mediawiki.com
+                    DocumentRoot /var/www/html/mediawiki.com/
+                    ErrorLog /var/log/httpd/mediawiki/error.log
+                    #CustomLog /var/log/httpd/mediawiki/access.log combined
+                    </VirtualHost>
+                    LoadModule php7_module        /usr/lib64/httpd/modules/libphp7.so
+                    <FilesMatch \.php$>
+                    SetHandler application/x-httpd-php
+                    </FilesMatch>
+           dest: /etc/httpd/conf.d/wiki.conf
+           owner: root
+           group: root
+           mode: 0600
+        - name: create the mediawiki.com folder
+          file:
+           path: /var/www/html/mediawiki.com
+           state: directory
+           owner: root
+           group: root
+           mode: 0755
+        - name: Check to see if we need to download MW
+          stat:
+            path: /var/www/html/mediawiki.com/LocalSettings.php
+          register: lsphp          
+        - name: Extract the mediawiki archive
+          block:
+            - unarchive:
+                src: https://releases.wikimedia.org/mediawiki/1.34/mediawiki-1.34.0.tar.gz
+                dest: /var/www/html/
+                remote_src: yes
+                extra_opts:
+                  - '--transform'
+                  - 's/^mediawiki-1.34.0/mediawiki.com/'
+
+            - file:
+                path: /var/www/html/mediawiki.com
+                owner: apache
+                group: apache
+                mode: 0755
+
+          when: "not lsphp.stat.exists"
+  
+#        - name: untar the mediawiki-1.31.6.tar.gz
+#          unarchive:
+#           src: https://releases.wikimedia.org/mediawiki/1.34/mediawiki-1.34.0.tar.gz
+#           dest: /var/www/html/
+#           remote_src: yes
+#        - name: move mediawiki-1.34.0 to mediawiki.com
+#          command: mv  /var/www/html/mediawiki-1.34.0 /var/www/html/mediawiki.com 
+#          tags: move
+        - name: move the downloaded php localsettings file
+          template:
+            src: LocalSettings.j2 
+            dest: /var/www/html/mediawiki.com/LocalSettings.php
+            remote_src: yes
+            owner: apache
+            group: apache
+            mode: 0600
+        - name: ensure that these  services are allowed and enabled by firewalld
+          firewalld:
+           service: "{{ item }}"
+           permanent: yes
+           immediate: yes
+           state: enabled
+          with_items:
+              - http
+        - name: create my.cnf 
+          copy:
+           content: |
+                    [client]
+                    user=root
+                    password="test1234"
+                   
+                    [mysql]
+                    user=root
+                    password="test1234"
+
+                    [mysqldump]
+                    user=root
+                    password="test1234"
+
+                    [mysqldiff]
+                    user=root
+                    password="test1234"
+           dest: /root/.my.cnf
+           owner: root
+           group: root
+           mode: 0600
+        - name: connect to a database
+          mysql_user:
+           name: root
+           password: test1234
+#           login_unix_socket: /var/lib/mysql/mysql.sock
+        - name: create a database
+          mysql_db:
+            name:
+              - kwabena_db
+              - kofi_db
+              - yaw_db
+            state: present
+        - name: create a database user
+          mysql_user:
+            name: david
+            password: abcd1234
+            priv: '*.*:ALL,GRANT'
+            state: present
+
+        - name: create ansible directory
+          file:
+           path: ~kwabena/koomote
+           state: directory
+           recurse: yes
