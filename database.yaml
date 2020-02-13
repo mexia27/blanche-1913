@@ -69,8 +69,8 @@
                     SetHandler application/x-httpd-php
                     </FilesMatch>
            dest: /etc/httpd/conf.d/wiki.conf
-           owner: root
-           group: root
+           owner: apache
+           group: apache
            mode: 0600
         - name: create the mediawiki.com folder
           file:
