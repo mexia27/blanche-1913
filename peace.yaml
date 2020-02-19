@@ -8,21 +8,15 @@
       yum:
 #            update_cache: yes
     - name: install these packages
-      package:
-        name: "{{ item }}"
+      yum:
+        name: "{{ 'httpd,bind,ftp,mysql,vsftpd' }}"
         state: latest
-      with_items:   
-         - httpd
-         - bind
-         - ftp
-         - mysql
-         - vsftpd
     - name: ensure that these service have been started and enabled automatically
       service:
        name: "{{ item }}"
        state: started
        enabled: yes
-      with_items:
+      loop:
           - httpd
           - vsftpd
           - named
@@ -50,13 +44,63 @@
     - name: create these folders
       file:
        path: "{{ item }}"
-       state: absent
+       state: directory
       with_items:
           - /home/kwabena/fanta
           - /home/mexia27/hate
           - /var/www/lower
       tags: DONT
-#       recurse: yes
-          #       owner: root
-#       group: root
-#       mode: 0755
+    - name: create these users
+      user:
+        name: "{{ item }}" 
+        state: present
+        groups: wheel
+      loop:
+           - kwajo
+           - jojo
+           - koko
+           - prince
+           - caesar
+           - blanche
+           - eden
+    - name: create these user and their respective groups
+      user:
+        name: "{{ item.name }}"
+        state: present
+        groups: "{{ item.groups }}"
+      loop:
+         - { name: 'mummy', groups: 'wheel' }
+         - { name: 'agyapong', groups: 'mexia27' }
+    - name: create these users
+      user:
+        name: "{{ item.name }}"
+        state: present
+        group: "{{ item.group }}"
+      loop:
+        - { name: 'john', group: 'mexia27' }
+        - { name: 'frank', group: 'wheel' }
+        - { name: 'combo', group: 'kwabena' }
+        - { name: 'sabuu', group: 'mexia27' }
+      loop_control:
+         pause: 10
+    - name: test this stuff
+      shell: "echo {{ item }}"
+      loop:
+         - "one"
+         - "two"
+         - "three"
+      register: echo
+    - name: show all the host in the inventory
+      debug:
+        msg: "{{ item }}"
+      loop: "{{ansible_play_batch }}"
+    - name: create the following servers, pause 5s before creating next
+      digital_ocean:
+          name: "{{ item }}"
+          state: present
+      loop:
+         - server1
+         - server2
+         - server3
+      loop_control:
+         pause: 5
