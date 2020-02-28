@@ -20,7 +20,10 @@
           - httpd
           - vsftpd
           - named
-#          - ftp
+          - mariadb
+      loop_control:
+         pause: 5
+      tags: DONT  
     - name: make sure firewall allows these services
       firewalld:
        service: "{{ item }}"
@@ -53,7 +56,8 @@
     - name: create these users
       user:
         name: "{{ item }}" 
-        state: present
+        state: absent
+        remove: true 
         groups: wheel
       loop:
            - kwajo
@@ -63,6 +67,7 @@
            - caesar
            - blanche
            - eden
+      tags: delete 
     - name: create these user and their respective groups
       user:
         name: "{{ item.name }}"
@@ -104,3 +109,45 @@
          - server3
       loop_control:
          pause: 5
+      tags: DONT
+    - name: count our fruit
+      debug:
+          msg: "{{ item }} with index {{ my_idx }}"
+      loop:
+           - apple
+           - banana
+           - pear
+      loop_control:
+         index_var: my_idx
+    - name: add the user kate with a specific uid and a primary group of whee
+      vars:
+        user_pass: $6$hp4WaL1ZCqJwMNxr$T94SFHpVDegFxNSp5653P7EiDk0BKaKUfHAU/uZ2kFMKTwsI4krTw0KBHGYWefbrbKOEsRQFE94Ogxxx9juQJ1
+      user:
+       name: kate
+       group: wheel
+       comment: kate spade
+       uid: 9999
+       password: "{{ user_pass }}"
+      tags: free
+    - name: create the user fufuboy with a bash shell,ppending the group wheel and mexia27 to the user's group
+      vars:
+       user_pass: $6$hp4WaL1ZCqJwMNxr$T94SFHpVDegFxNSp5653P7EiDk0BKaKUfHAU/uZ2kFMKTwsI4krTw0KBHGYWefbrbKOEsRQFE94Ogxxx9juQJ1
+      user:
+       name: fufuboy
+       shell: /bin/bash
+       uid: 300
+       password: "{{ user_pass }}"
+       groups: wheel,mexia27
+      tags: user
+    - name: create the following users
+      user:
+         name: "{{ item }}"
+         state: present
+         groups: mexia27,kwabena
+         shell: /bin/nologin
+      loop:
+         - a
+         - b
+         - c
+         - d
+       

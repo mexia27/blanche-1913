@@ -1,0 +1,22 @@
+---
+ - name: create these fools
+   hosts: localhost
+   remote_user: root
+   gather_facts: true
+   tasks:
+     - name: create the following user
+       vars:
+        default_user_password:  $6$hp4WaL1ZCqJwMNxr$T94SFHpVDegFxNSp5653P7EiDk0BKaKUfHAU/uZ2kFMKTwsI4krTw0KBHGYWefbrbKOEsRQFE94Ogxxx9juQJ1
+        admin_group: mexia27
+       user:
+           name: "{{ item }}" 
+           state: absent
+           remove: true
+           shell: /bin/dash
+           groups: "{{ admin_group }}"
+           password: "{{ default_user_password }}"
+       loop:
+         - ama
+         - yaa 
+         - afia
+         - akua 

@@ -1,0 +1,91 @@
+---
+ - name: setup systran for test
+   hosts: localhost
+   remote_user: root
+   gather_facts: true
+   tasks:
+      - name: ensure this packages are at their latest version
+        yum:
+         name:
+           - policycoreutils-python
+           - firewalld
+         state: latest
+      - name: ensure these services are started and enabled
+        service:
+         name: "{{ item }}"
+         state: restarted
+         enabled: yes
+        register: paa 
+        loop:
+          - firewalld
+      - debug:
+         msg: "{{ paa }}"   
+      - name: create the systran_ses_limits.conf file
+        template:
+          src: systran.j2
+          dest: /etc/security/limits.d/systran_ses_limits.conf
+          remote_src: yes
+          owner: root
+          group: root
+          mode: 0644
+      - name: Update Firewall rules
+        firewalld:
+         service: "{{ item }}"
+         permanent: yes
+         immediate: yes
+         state: enabled
+        loop:
+           - http
+           - https
+      - name: using the Selinux enforcing tcp  rule
+        seport:
+         ports: 5672-15672
+         proto: tcp
+         setype: amqp_port_t
+         state: present
+        register: putty
+      - debug:
+         msg: "{{ putty }}"
+      - name: using the Selinux enforcing udp rule
+        seport:
+         ports: 5672
+         proto: udp
+         setype: amqp_port_t
+         state: present
+        register: udp
+      - debug:
+          msg: "{{ udp }}"
+      - name: allow the following firewall ports
+#        firewalld:
+#          zone: public
+#          port: 3001/tcp
+#          permanent: yes
+#          state: enabled
+#      - firewalld:
+#          zone: public
+#          port: 3443/tcp
+#          permanent: yes
+#          state: enabled 
+        firewalld:
+          zone: public
+          port: 3001-3443-8900-8903,8904/tcp
+          permanent: yes
+          state: enabled 
+      - firewalld:
+          rich_rule: rule family=ipv4 source address=10.18.0.1/16 port port=8892 protocol=tcp accept 
+          zone: public
+          permanent: yes
+          state: enabled 
+      - name: reload firewalld services
+        service:
+         name: "{{ item }}"
+         state: restarted
+         enabled: yes
+        loop:
+          - firewalld
+      - name: check this output
+        command: /bin/firewall-cmd --reload
+        command: /bin/firewall-cmd --list-all
+        register: firewall
+      - debug:
+         msg: "{{ firewall }}"
