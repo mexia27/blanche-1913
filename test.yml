@@ -20,3 +20,17 @@
          - yaa 
          - afia
          - akua 
+     - name: add the following lines at the top of the files
+       lineinfile:
+          path: ~kwabena/day/first.txt
+          line: 'God is soo super wonderful'
+          insertbefore: BOF
+     - name: add this line to the end of the file
+       lineinfile:
+         path: ~kwabena/day/first.txt
+         line: '*.* /var/log/poop.log' 
+     - name: comment on this line
+       replace:
+        path: ~kwabena/day/first.txt
+        regexp: 'God is soo super wonderful'
+        replace: '#God is soo super wonderful'

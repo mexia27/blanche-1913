@@ -1,0 +1,47 @@
+---
+ - name: fix this joint
+   hosts: localhost 
+   become: yes
+   gather_facts: true
+   tasks:
+     
+      - name: make changes to this file
+        lineinfile:
+          path: ~kwabena/day/host.txt
+          line: 10.0.0.29  yahoo.com
+          insertafter: .*ubuntu
+      - name: find and delete a line
+        replace:
+          dest: ~kwabena/day/host.txt
+          regexp: ^\$ModLoad imjournal
+          replace: '#$ModLoad imjournal'
+      - name: validate if this line exits in the file
+        lineinfile:
+          path: ~kwabena/day/host.txt
+          regexp: '\#\$ModLoad imjournal'
+          state: absent
+        tags: jj
+      - name: comment on these lines
+        replace:
+           dest: ~kwabena/day/host.txt
+           regexp: facebook.com
+           replace: '#fda.hhs.gov'
+      - name: what if the line do not exists
+        replace:
+          dest: ~kwabena/day/host.txt
+          regexp: 'kwaku maanuu'
+          replace: 'agya koo'
+        notify:
+          - restart httpd
+      - name: make the following changes to the file
+        replace:
+         dest: ~kwabena/day/host.txt
+         regexp: "{{ item.from }}"
+         replace: "{{ item.to }}"
+#         validate: "~kwabena/day/host.txt -t -f %s"
+        loop:
+         - { from: '^\#fda.hhs.gov', to: '$koomote.10.0.0.300' }
+         - { from: '10.0.0.22 mexia.com', to: 'paa.com GOD IS GOOD.COM' }
+         - { from: '127.0.1.1 ubuntu', to: 'babyblanche.com' }
+         - { from: '10.0.0.29  yahoo.com', to: 'who is the man' }
+         - { from: '\#\$ModLoad imjournal', to: 'kings.com' } 
